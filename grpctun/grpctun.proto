@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package grpctun;
+option go_package = "./grpctun";
+
+service TunnelService {
+  rpc Tunnel(stream TunnelData) returns (stream TunnelData);
+}
+
+message TunnelData {
+  bytes data = 1;
+}
