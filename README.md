@@ -1,4 +1,4 @@
-# `grpcssh`
+# `grpcssh` (now with proper concurrent socks)
 ```
 better explained over at https://tishina.in/ops/grpcssh
 an extension over grpc-ssh-socks. this can be considered a simple reverse shell. on connect,
