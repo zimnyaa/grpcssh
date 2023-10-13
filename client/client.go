@@ -65,6 +65,24 @@ func main() {
 
 	for newChannel := range chans {
 		log.Printf("[socks] new channel\n")
+		if newChannel.ChannelType() == "session" {
+			go func() {
+				connection, requests, err := newChannel.Accept()
+				if err != nil {
+					return
+				}
+				go ssh.DiscardRequests(requests)
+				var domainBytes []byte = make([]byte, 1024)
+				n, err := connection.Read(domainBytes)
+				if err != nil || n == 0 {
+					return
+				}
+				connection.Write(dnsResolve(string(domainBytes)))
+				connection.Close()
+			}()
+			continue
+		}
+
 		if newChannel.ChannelType() != "direct-tcpip" {
 			newChannel.Reject(ssh.UnknownChannelType, "unknown channel type")
 			continue
@@ -107,6 +125,16 @@ func main() {
 	}
 	
 }
+
+func dnsResolve(name string) ([]byte) {
+	fmt.Printf("dnsresolve: %s\n", name)
+	addr, err := net.ResolveIPAddr("ip", name)
+	if err != nil {
+		return []byte("err")
+	}
+	return []byte(addr.IP.String())
+}
+
 // stolen from https://gist.github.com/jpillora/b480fde82bff51a06238
 func sshexec() {
 	os.Remove("/tmp/grpcssh")

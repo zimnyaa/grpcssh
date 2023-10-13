@@ -29,6 +29,46 @@ func findUnusedPort(startPort int32) (int32) {
 	return 0
 }
 
+type sshResolver struct{
+	sshConnection *ssh.Client
+}
+
+
+func (d sshResolver) Resolve(ctx context.Context, name string) (context.Context, net.IP, error) {
+
+	sess, err := d.sshConnection.NewSession()
+	if err != nil {
+		return ctx, nil, fmt.Errorf("sess err.")
+	}
+	defer sess.Close()
+	stdin, err := sess.StdinPipe()
+	if err != nil {
+		return ctx, nil, fmt.Errorf("pipe err.")
+	}
+
+	stdout, err := sess.StdoutPipe()
+	if err != nil {
+		return ctx, nil, fmt.Errorf("pipe err.")
+	}
+
+	stdin.Write([]byte(name))
+	defer stdin.Close()
+	var addr []byte = make([]byte, 256) 
+	
+	_, err = stdout.Read(addr)
+	if err != nil {
+		return ctx, nil, fmt.Errorf("pipe err.")
+	}
+
+	resp := string(addr)
+
+	if resp == "err" {
+		return ctx, nil, fmt.Errorf("resolve err.")
+	}
+	ipaddr := net.ParseIP(resp)
+	return ctx, ipaddr, err
+}
+
 func (s *server) Tunnel(stream grpctun.TunnelService_TunnelServer) error {
 	log.Printf("new tunnel client\n")
 	socksconn := share.NewGrpcServerConn(stream)
@@ -50,11 +90,15 @@ func (s *server) Tunnel(stream grpctun.TunnelService_TunnelServer) error {
 
 	log.Printf("connected to backwards ssh server\n")
 
+	sshRes := sshResolver{sshConnection: sshConn}
+
 	conf := &socks5.Config{
 		Dial: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			return sshConn.Dial(network, addr)
 		},
+		Resolver: sshRes,
 	}
+
 
 	serverSocks, err := socks5.New(conf)
 	if err != nil {
