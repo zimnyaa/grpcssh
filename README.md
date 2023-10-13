@@ -5,6 +5,8 @@ an extension over grpc-ssh-socks. this can be considered a simple reverse shell.
 a socks proxy is opened by the server. connecting over ssh to a hardcoded ip address with
 an arbitrary password grants a full pty shell.
 
+DNS resolution is very simple and done via an SSH "session" channel in the form of Write(addr), Read(ip)
+
 for the pty shell, full credit goes to https://gist.github.com/jpillora/
 here it is, kind of working:
 ```
