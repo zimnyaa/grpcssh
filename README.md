@@ -7,6 +7,7 @@ an arbitrary password grants a full pty shell.
 
 DNS resolution is very simple and done via an SSH "session" channel in the form of Write(addr), Read(ip)
 
+this is a reference implementation for a reverse socks proxy in a gRPC-based implant. The SSH server is added mostly for fun.
 for the pty shell, full credit goes to https://gist.github.com/jpillora/
 here it is, kind of working:
 ```
