@@ -107,7 +107,10 @@ func main() {
 			}
 				
 			if err == nil {
-				channel, chreqs, _ := newChannel.Accept()
+				channel, chreqs, err := newChannel.Accept()
+				if err != nil {
+					return
+				}
 				go ssh.DiscardRequests(chreqs)
 	
 				go func() {
